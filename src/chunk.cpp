@@ -1,7 +1,7 @@
 #include "chunk.h"
 
 Chunk::Chunk(const glm::ivec3 &position)
-    : _position(position), _mesh(nullptr)
+    : _position(position), _opaqueMesh(nullptr), _transparentMesh(nullptr)
 {
     _boundingBox.min = glm::vec3(position) * glm::vec3(CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
     _boundingBox.max = glm::vec3(position + glm::ivec3(1, 1, 1)) * glm::vec3(CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
@@ -9,24 +9,31 @@ Chunk::Chunk(const glm::ivec3 &position)
 
 Chunk::~Chunk()
 {
-    if (_mesh)
-        delete _mesh;
+    if (_opaqueMesh)
+        delete _opaqueMesh;
+    if (_transparentMesh)
+        delete _transparentMesh;
 }
 
 void Chunk::generateMesh(Chunk *neighbors[4])
 {
-    if (_mesh)
-        delete _mesh;
+    if (_opaqueMesh)
+        delete _opaqueMesh;
+    if (_transparentMesh)
+        delete _transparentMesh;
 
     BufferLayout layout;
     layout.push<float>(3); // Position
     layout.push<float>(2); // Texture Coords
     layout.push<float>(1); // Light
 
-    _mesh = new Mesh(layout);
+    _opaqueMesh = new Mesh(layout);
+    _transparentMesh = new Mesh(layout);
 
-    std::vector<ChunkVertex> vertices;
-    std::vector<unsigned int> indices;
+    std::vector<ChunkVertex> opaqueVertices;
+    std::vector<unsigned int> opaqueIndices;
+    std::vector<ChunkVertex> transparentVertices;
+    std::vector<unsigned int> transparentIndices;
 
     for (int x = 0; x < CHUNK_SIZE_X; x++)
     {
@@ -40,22 +47,31 @@ void Chunk::generateMesh(Chunk *neighbors[4])
                     continue;
 
                 bool isFaceVisible[6] = {false, false, false, false, false, false};
-                isFaceVisible[FACE_EAST] = verifyBlockVisibility(x + 1, y, z, neighbors[0]);  // +X
-                isFaceVisible[FACE_WEST] = verifyBlockVisibility(x - 1, y, z, neighbors[1]);  // -X
-                isFaceVisible[FACE_UP] = verifyBlockVisibility(x, y + 1, z, nullptr);         // +Y
-                isFaceVisible[FACE_DOWN] = verifyBlockVisibility(x, y - 1, z, nullptr);       // -Y
-                isFaceVisible[FACE_SOUTH] = verifyBlockVisibility(x, y, z + 1, neighbors[2]); // +Z
-                isFaceVisible[FACE_NORTH] = verifyBlockVisibility(x, y, z - 1, neighbors[3]); // -Z
+                isFaceVisible[FACE_EAST] = verifyBlockVisibility(x + 1, y, z, neighbors[0], block);  // +X
+                isFaceVisible[FACE_WEST] = verifyBlockVisibility(x - 1, y, z, neighbors[1], block);  // -X
+                isFaceVisible[FACE_UP] = verifyBlockVisibility(x, y + 1, z, nullptr, block);         // +Y
+                isFaceVisible[FACE_DOWN] = verifyBlockVisibility(x, y - 1, z, nullptr, block);       // -Y
+                isFaceVisible[FACE_SOUTH] = verifyBlockVisibility(x, y, z + 1, neighbors[2], block); // +Z
+                isFaceVisible[FACE_NORTH] = verifyBlockVisibility(x, y, z - 1, neighbors[3], block); // -Z
 
                 for (int i = 0; i < 6; i++)
+                {
                     if (isFaceVisible[i])
-                        addFaceToMesh(x, y, z, i, block, vertices, indices);
+                    {
+                        if (isTransparent(block))
+                            addFaceToMesh(x, y, z, i, block, transparentVertices, transparentIndices);
+                        else
+                            addFaceToMesh(x, y, z, i, block, opaqueVertices, opaqueIndices);
+                    }
+                }
             }
         }
     }
 
-    _mesh->setVertices(vertices.data(), vertices.size() * sizeof(ChunkVertex));
-    _mesh->setIndices(indices.data(), indices.size() * sizeof(unsigned int));
+    _opaqueMesh->setVertices(opaqueVertices.data(), opaqueVertices.size() * sizeof(ChunkVertex));
+    _opaqueMesh->setIndices(opaqueIndices.data(), opaqueIndices.size() * sizeof(unsigned int));
+    _transparentMesh->setVertices(transparentVertices.data(), transparentVertices.size() * sizeof(ChunkVertex));
+    _transparentMesh->setIndices(transparentIndices.data(), transparentIndices.size() * sizeof(unsigned int));
 }
 
 void Chunk::setBlock(int x, int y, int z, BlockType type)
@@ -78,7 +94,7 @@ BlockType Chunk::getBlock(int x, int y, int z) const
     return _blocks[x][y][z];
 }
 
-bool Chunk::verifyBlockVisibility(int x, int y, int z, Chunk *neighbor)
+bool Chunk::verifyBlockVisibility(int x, int y, int z, Chunk *neighbor, BlockType currentBlockType)
 {
     if (y < 0 || y >= CHUNK_SIZE_Y)
     {
@@ -93,23 +109,26 @@ bool Chunk::verifyBlockVisibility(int x, int y, int z, Chunk *neighbor)
             _position.x * CHUNK_SIZE_X + x,
             y,
             _position.z * CHUNK_SIZE_Z + z);
-        return verifyNeighborBlockVisibility(x, y, z, neighbor);
+        return verifyNeighborBlockVisibility(x, y, z, neighbor, currentBlockType);
     }
 
-    return verifyLocalBlockVisibility(x, y, z);
+    return verifyLocalBlockVisibility(x, y, z, currentBlockType);
 }
 
-bool Chunk::verifyLocalBlockVisibility(int x, int y, int z)
+bool Chunk::verifyLocalBlockVisibility(int x, int y, int z, BlockType currentBlockType)
 {
     if (x < 0 || x >= CHUNK_SIZE_X ||
         y < 0 || y >= CHUNK_SIZE_Y ||
         z < 0 || z >= CHUNK_SIZE_Z)
         return true;
 
-    return getBlock(x, y, z) == AIR;
+    BlockType neighborBlock = getBlock(x, y, z);
+    if (currentBlockType == WATER)
+        return neighborBlock == AIR; // água só abre face contra ar
+    return isTransparent(neighborBlock); // blocos opacos abrem contra transparência (ar/água)
 }
 
-bool Chunk::verifyNeighborBlockVisibility(int x, int y, int z, Chunk *neighbor)
+bool Chunk::verifyNeighborBlockVisibility(int x, int y, int z, Chunk *neighbor, BlockType currentBlockType)
 {
     if (!neighbor)
         return true;
@@ -124,7 +143,10 @@ bool Chunk::verifyNeighborBlockVisibility(int x, int y, int z, Chunk *neighbor)
     else if (z >= CHUNK_SIZE_Z)
         z -= CHUNK_SIZE_Z;
 
-    return neighbor->getBlock(x, y, z) == AIR;
+    BlockType neighborBlock = neighbor->getBlock(x, y, z);
+    if (currentBlockType == WATER)
+        return neighborBlock == AIR; // água só abre face contra ar
+    return isTransparent(neighborBlock); // blocos opacos abrem contra transparência (
 }
 
 void Chunk::addFaceToMesh(int x, int y, int z, int faceIndex, BlockType block, std::vector<ChunkVertex> &vertices, std::vector<unsigned int> &indices)

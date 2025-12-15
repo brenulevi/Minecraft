@@ -77,9 +77,9 @@ void Renderer::renderWorld(const World &world)
     {
         Chunk *chunk = pair.second;
 
-        Mesh *mesh = chunk->getMesh();
+        Mesh* opaqueMesh = chunk->getOpaqueMesh();
 
-        if (!mesh || !_frustum.isBoxVisible(chunk->getBoundingBox()))
+        if (!opaqueMesh || !_frustum.isBoxVisible(chunk->getBoundingBox()))
             continue;
 
         glm::vec3 chunkPos = chunk->getPosition();
@@ -89,8 +89,16 @@ void Renderer::renderWorld(const World &world)
         model = glm::translate(model, chunkWorldPos);
         _chunkShader->setUniformMat4f("model", glm::value_ptr(model));
 
-        mesh->bind();
-        glDrawElements(GL_TRIANGLES, mesh->getIndexCount(), GL_UNSIGNED_INT, 0);
+        opaqueMesh->bind();
+        glDrawElements(GL_TRIANGLES, opaqueMesh->getIndexCount(), GL_UNSIGNED_INT, 0);
+
+        Mesh* transparentMesh = chunk->getTransparentMesh();
+        
+        if (!transparentMesh)
+            continue;
+
+        transparentMesh->bind();
+        glDrawElements(GL_TRIANGLES, transparentMesh->getIndexCount(), GL_UNSIGNED_INT, 0);
     }
 }
 

@@ -20,6 +20,9 @@ struct BlockTexture
     int side;
 };
 
+bool isTransparent(BlockType block);
+bool isRaycastable(BlockType block);
+
 BlockTexture getBlockTexture(BlockType type);
 
 void getAtlasUV(int textureID, float uvs[8]);

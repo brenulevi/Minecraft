@@ -4,7 +4,7 @@
 #include "fog.h"
 
 #define INITIAL_WORLD_RADIUS 5
-#define RENDER_DISTANCE 32
+#define RENDER_DISTANCE 8
 
 class World
 {

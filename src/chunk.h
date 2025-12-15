@@ -39,18 +39,20 @@ public:
     BlockType getBlock(int x, int y, int z) const;
 
     inline const glm::ivec3& getPosition() const { return _position; }
-    inline Mesh* getMesh() const { return _mesh; }
+    inline Mesh* getOpaqueMesh() const { return _opaqueMesh; }
+    inline Mesh* getTransparentMesh() const { return _transparentMesh; }
     inline const Box& getBoundingBox() const { return _boundingBox; }
 
 private:
-    bool verifyBlockVisibility(int x, int y, int z, Chunk* neighbor);
-    bool verifyLocalBlockVisibility(int x, int y, int z);
-    bool verifyNeighborBlockVisibility(int x, int y, int z, Chunk* neighbor);
+    bool verifyBlockVisibility(int x, int y, int z, Chunk* neighbor, BlockType currentBlockType);
+    bool verifyLocalBlockVisibility(int x, int y, int z, BlockType currentBlockType);
+    bool verifyNeighborBlockVisibility(int x, int y, int z, Chunk* neighbor, BlockType currentBlockType);
     void addFaceToMesh(int x, int y, int z, int faceIndex, BlockType block, std::vector<ChunkVertex>& vertices, std::vector<unsigned int>& indices);
 
 private:
     glm::ivec3 _position;
     BlockType _blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
-    Mesh* _mesh;
+    Mesh* _opaqueMesh;
+    Mesh* _transparentMesh;
     Box _boundingBox;
 };

@@ -1,5 +1,15 @@
 #include "block.h"
 
+bool isTransparent(BlockType block)
+{
+    return block == AIR || block == WATER;
+}
+
+bool isRaycastable(BlockType block)
+{
+    return block != AIR && block != WATER;
+}
+
 BlockTexture getBlockTexture(BlockType type)
 {
     switch (type)

@@ -125,7 +125,7 @@ void Player::doRayCastAction()
         if(_lastRaycastHit.hit)
         {
             glm::ivec3 placePosition = _lastRaycastHit.blockPosition + _lastRaycastHit.normal;
-            Game::getInstance().getWorld().placeBlockAt(placePosition, STONE);
+            Game::getInstance().getWorld().placeBlockAt(placePosition, WATER);
         }
     }
 }

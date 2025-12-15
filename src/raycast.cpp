@@ -19,7 +19,7 @@ bool raycast(const glm::vec3 &origin, const glm::vec3 &direction, float maxDista
     while (distance < maxDistance)
     {
         BlockType blockType = Game::getInstance().getWorld().getChunkManager().getBlockAt(blockPos);
-        if (blockType != AIR)
+        if (isRaycastable(blockType))
         {
             outHit.hit = true;
             outHit.blockPosition = glm::vec3(blockPos);
