@@ -1,4 +1,4 @@
-#include "chunkManager.h"
+#include "chunkmanager.h"
 
 ChunkManager::ChunkManager(int seed)
 {
@@ -65,7 +65,7 @@ void ChunkManager::loadChunkAt(const glm::ivec3 &position)
 
     _chunks[position] = newChunk;
 
-    // Enfileira apenas se ainda não estiver na fila
+    // Queue the new chunk for mesh generation
     if(_queuedChunks.insert(newChunk).second)
         _chunksToGenerateMesh.push(newChunk);
 

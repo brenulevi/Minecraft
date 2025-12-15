@@ -62,12 +62,10 @@ target_include_directories(game PRIVATE
     deps/glfw/include
     deps/glm
     deps/stb_image/include
-    deps/fastnoiselite
+    deps/FastNoiseLite
 )
 
 add_custom_command(TARGET game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:game>/shaders
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/textures $<TARGET_FILE_DIR:game>/textures
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:game>/assets
 )

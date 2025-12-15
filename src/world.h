@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chunkManager.h"
+#include "chunkmanager.h"
 #include "fog.h"
 
 #define INITIAL_WORLD_RADIUS 5

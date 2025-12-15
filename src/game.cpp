@@ -20,7 +20,7 @@ Game::Game()
     _input = new Input(_window->getGLFWwindow());
 
     _uiManager = new UIManager();
-    _uiManager->crosshair = new Crosshair(new Texture("textures/crosshair.png"), 32.0f, 0.0f);
+    _uiManager->crosshair = new Crosshair(new Texture("assets/textures/crosshair.png"), 32.0f, 0.0f);
 
     _player = new Player(55.0f, 0.1f);
     _world = new World(12345, _player->getTransform().position);

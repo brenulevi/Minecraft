@@ -6,12 +6,11 @@ Renderer::Renderer(int width, int height)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         throw std::runtime_error("Failed to initialize GLAD");
 
-    _chunkShader = new Shader("shaders/chunk.vert", "shaders/chunk.frag");
-    _uiShader = new Shader("shaders/ui.vert", "shaders/ui.frag");
-    _outlineShader = new Shader("shaders/outline.vert", "shaders/outline.frag");
+    _chunkShader = new Shader("assets/shaders/chunk.vert", "assets/shaders/chunk.frag");
+    _uiShader = new Shader("assets/shaders/ui.vert", "assets/shaders/ui.frag");
+    _outlineShader = new Shader("assets/shaders/outline.vert", "assets/shaders/outline.frag");
 
-    _textureAtlas = new Texture("textures/atlas.png");
-
+    _textureAtlas = new Texture("assets/textures/atlas.png");
     generateMeshes();
 
     glViewport(0, 0, width, height);

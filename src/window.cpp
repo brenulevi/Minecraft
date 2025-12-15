@@ -3,6 +3,10 @@
 Window::Window(int width, int height, const char *title)
     : _width(width), _height(height), _title(title), _isFullscreen(false), _vsyncEnabled(true)
 {
+    #ifdef linux
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    #endif
+
     if(!glfwInit())
         throw std::runtime_error("Failed to initialize GLFW");
 
