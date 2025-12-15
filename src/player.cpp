@@ -125,7 +125,7 @@ void Player::doRayCastAction()
         if(_lastRaycastHit.hit)
         {
             glm::ivec3 placePosition = _lastRaycastHit.blockPosition + _lastRaycastHit.normal;
-            Game::getInstance().getWorld().placeBlockAt(placePosition, GRASS);
+            Game::getInstance().getWorld().placeBlockAt(placePosition, STONE);
         }
     }
 }

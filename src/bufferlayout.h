@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <vector>
+#include <stdexcept>
 
 struct BufferLayoutElement
 {
@@ -43,7 +44,7 @@ private:
 template <typename T>
 inline void BufferLayout::push(unsigned int count)
 {
-    static_assert(false, "Unsupported type in BufferLayout::push");
+    throw std::runtime_error("Unsupported type");
 }
 
 template <>
