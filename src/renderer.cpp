@@ -73,6 +73,8 @@ void Renderer::renderWorld(const World &world)
     _chunkShader->setUniform3f("fogColor", fog.color.r, fog.color.g, fog.color.b);
     _chunkShader->setUniform1f("fogDensity", fog.density);
 
+    std::queue<Mesh*> transparentMeshes;
+    std::queue<glm::vec3> transparentMeshPositions;
     for (auto &pair : world.getChunkManager().getAllChunks())
     {
         Chunk *chunk = pair.second;
@@ -93,12 +95,30 @@ void Renderer::renderWorld(const World &world)
         glDrawElements(GL_TRIANGLES, opaqueMesh->getIndexCount(), GL_UNSIGNED_INT, 0);
 
         Mesh* transparentMesh = chunk->getTransparentMesh();
-        
-        if (!transparentMesh)
-            continue;
+        if (transparentMesh)
+            transparentMeshes.push(transparentMesh);
+
+        transparentMeshPositions.push(chunkWorldPos);
+    }
+
+    while (!transparentMeshes.empty() && !transparentMeshPositions.empty())
+    {
+        Mesh* transparentMesh = transparentMeshes.front();
+        transparentMeshes.pop();
+
+        glm::vec3 chunkPos = transparentMeshPositions.front();
+        transparentMeshPositions.pop();
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, chunkPos);
+        _chunkShader->setUniformMat4f("model", glm::value_ptr(model));
+
+        glDepthMask(GL_FALSE); // Disable depth writing for transparent objects
 
         transparentMesh->bind();
         glDrawElements(GL_TRIANGLES, transparentMesh->getIndexCount(), GL_UNSIGNED_INT, 0);
+
+        glDepthMask(GL_TRUE); // Re-enable depth writing
     }
 }
 

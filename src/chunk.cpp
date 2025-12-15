@@ -145,8 +145,8 @@ bool Chunk::verifyNeighborBlockVisibility(int x, int y, int z, Chunk *neighbor, 
 
     BlockType neighborBlock = neighbor->getBlock(x, y, z);
     if (currentBlockType == WATER)
-        return neighborBlock == AIR; // água só abre face contra ar
-    return isTransparent(neighborBlock); // blocos opacos abrem contra transparência (
+        return neighborBlock == AIR;
+    return isTransparent(neighborBlock);
 }
 
 void Chunk::addFaceToMesh(int x, int y, int z, int faceIndex, BlockType block, std::vector<ChunkVertex> &vertices, std::vector<unsigned int> &indices)
